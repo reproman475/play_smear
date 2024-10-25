@@ -282,6 +282,31 @@ function TeamDroppable(props) {
   );
 }
 
+function SpectateDroppable(props) {
+  const {gameID, team, teamList, setTeamList, allPlayers, setAllPlayers} = props;
+  return (
+    <Droppable droppableId={"Spectate"}>
+      {(provided, snapshot) => (
+        <Card
+          title={"Spectate"}
+          headStyle={{backgroundColor: "#f0f5f0" }}
+          className="teamCard"
+          style={getListStyle(snapshot.isDraggingOver)}
+        >
+          <div ref={provided.innerRef} style={{minHeight: 200}}>
+            <TeamHolder
+              players={teamList}
+              gameID={gameID}
+              removePlayerFromList={(player) => removePlayer(player, teamList, setTeamList, allPlayers, setAllPlayers)}
+            />
+            {provided.placeholder}
+          </div>
+        </Card>
+      )}
+    </Droppable>
+  );
+}
+
 function WaitingRoom(props) {
   const [allPlayers, setAllPlayers] = useState([]);
   const [bench, setBench] = useState([]);
@@ -457,6 +482,20 @@ function WaitingRoom(props) {
       />
     </Col>
   ));
+
+  const spectateDroppables = props.game.teams.map((team, index) => (
+    <Col key={index}>
+      <SpectateDroppable
+        gameID={props.game.id}
+        team={team}
+        teamList={teams[team.id.toString()].list}
+        setTeamList={teams[team.id.toString()].setList}
+        allPlayers={allPlayers}
+        setAllPlayers={setAllPlayers}
+      />
+    </Col>
+  ));
+
   const dnd = (
     <DragDropContext onDragEnd={onDragEnd}>
       <Row type="flex">
@@ -484,6 +523,7 @@ function WaitingRoom(props) {
           </Droppable>
         </Col>
         {teamDroppables}
+        {spectateDroppables}
       </Row>
     </DragDropContext>
   );

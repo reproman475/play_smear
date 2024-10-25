@@ -127,7 +127,7 @@ class GameViewSet(viewsets.ModelViewSet):
             raise ValidationError("Unable to spectate game, passcode is required and was incorrect")
 
         # TODO Don't add player to game, need something new for spectator
-        # Player.objects.create(game=game, user=self.request.user)
+        Player.objects.create(game=game, user=self.request.user)
         LOG.info(f"Added {self.request.user} as spectator to game {game}")
         return Response({"status": "success"})
 
