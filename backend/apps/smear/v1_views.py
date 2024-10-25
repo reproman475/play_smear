@@ -115,6 +115,25 @@ class GameViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=["post"],
+        permission_classes=[IsAuthenticated],
+    )
+    def spectate(self, request, pk=None):
+        game = self.get_object()
+        serializer = GameJoinSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        if game.passcode_required and game.passcode != serializer.data.get("passcode", None):
+            raise ValidationError("Unable to spectate game, passcode is required and was incorrect")
+
+        # TODO Don't add player to game, need something new for spectator
+        # Player.objects.create(game=game, user=self.request.user)
+        LOG.info(f"Added {self.request.user} as spectator to game {game}")
+        return Response({"status": "success"})
+
+    @action(
+        detail=True,
+        methods=["post"],
         permission_classes=[IsGameOwnerPermission],
     )
     def start(self, request, pk=None):

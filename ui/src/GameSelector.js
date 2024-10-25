@@ -17,6 +17,7 @@ class GameSelector extends Component {
     publicList: [],
     redirect: false,
     gameID: 0,
+    spectate: false,
   }
 
   componentDidMount() {
@@ -147,11 +148,39 @@ class GameSelector extends Component {
       });
   }
 
+  handleSpectate = (gameID, passcode) => {
+    console.log("spectate " + gameID);
+    this.setState({
+      loading: true
+    });
+    axios.post(`/api/smear/v1/games/${gameID}/spectate/`, {passcode: passcode})
+      .then((response) => {
+        this.setState({
+          redirect: true,
+          gameID: gameID,
+          loading: false,
+          spectate: true,
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        this.setState({
+          loading: false,
+        });
+        Modal.error({
+          title: "Unable to spectate game",
+          content: getErrorString(error.response.data),
+          maskClosable: true,
+        })
+      });
+  }
+
   render() {
     const commonProps = {
       handleDelete: this.handleDelete,
       handleJoin: this.handleJoin,
-      handleResume: this.handleResume
+      handleResume: this.handleResume,
+      handleSpectate: this.handleSpectate
     };
 
     if (this.state.redirect) {

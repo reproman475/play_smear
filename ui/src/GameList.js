@@ -18,7 +18,7 @@ class GameList extends Component {
   }
 
   render() {
-    const { signedInUser, initLoading, gameList, handleDelete, handleJoin, handleResume } = this.props;
+    const { signedInUser, initLoading, gameList, handleDelete, handleJoin, handleResume, handleSpectate } = this.props;
 
     const title = this.props.mode === 'public' ? "Join a game started by someone else" : "Manage My Games";
 
@@ -73,6 +73,7 @@ class GameList extends Component {
                         />
                       )}
                       <Button onClick={() => handleJoin(game.id, this.state[`passcode_${game.id}`])}>Join</Button>
+                      <Button onClick={() => handleSpectate(game.id, this.state[`passcode_${game.id}`])}>Spectate</Button>
                     </>
                   )
               }

@@ -45,8 +45,11 @@ function loadGame(gameID, handNum, trickNum, setLoading, setGame, setCardsIfNeed
     .then((response) => {
       console.log("loadGame", response);
       setLoading(false);
+      console.log("setGame");
       setGame(response.data);
+      console.log("initial cards");
       const initialCards = response.data?.current_hand?.cards || [];
+      console.log("set if needed")
       setCardsIfNeeded(initialCards);
     })
     .catch((error) => {
