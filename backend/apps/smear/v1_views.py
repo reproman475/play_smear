@@ -134,12 +134,15 @@ class GameViewSet(viewsets.ModelViewSet):
 
         player = Player.objects.create(game=game, user=self.request.user, is_spectator=True, spectate_only=True)
         print(f"Spectate Status: {player.is_spectator}")
+        spec_team = list(game.teams.all())[-1]
+        player.team = spec_team
+        player.save()
+        game.num_spectators += 1
+        game.save()
 
         if game.state != Game.STARTING:
             player.accept_dealt_cards([Card(value="ace", suit="spades"), Card(value="ace", suit="spades"), Card(value="ace", suit="spades")])
             player.accept_dealt_cards([Card(value="ace", suit="spades"), Card(value="ace", suit="spades"), Card(value="ace", suit="spades")])
-            spec_team = list(game.teams.all())[-1]
-            player.team = spec_team
             player.save()
 
         
@@ -180,6 +183,8 @@ class GameViewSet(viewsets.ModelViewSet):
                 LOG.info(f"Player with ID {player_id} did not exist")
                 pass
             else:
+                if (player.spectate_only):
+                    game.num_spectators -= 1
                 player.delete()
                 LOG.info(f"Removed {player} from game {pk}")
             return Response(
@@ -298,11 +303,9 @@ class TeamViewSet(viewsets.ModelViewSet):
         if (player.spectate_only and adding and team.name != 'Spectators'):
             LOG.info('Player can only spectate')
             return Response({"status":"failure"})
-        if (team.name == 'Spectators'):
-            if adding:
-                player.is_spectator = True
-            else:
-                player.is_spectator = False
+        if (not player.spectate_only):
+            LOG.info("Player cannot be moved to spectator")
+            return Response({"status":"failure"})
         player.team = team if adding else None
         player.save()
         LOG.info(f"{'Added' if adding else 'Removed'} player {player} {'to' if adding else 'from'} team {team}")

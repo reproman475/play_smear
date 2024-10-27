@@ -21,7 +21,8 @@ class Game(models.Model):
     owner = models.ForeignKey("auth.User", related_name="games", on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=256, blank=True, default="")
     num_players = models.IntegerField()
-    # num_spectators = models.IntegerField()
+    num_spectators = models.IntegerField()
+    
     num_teams = models.IntegerField()
     score_to_play_to = models.IntegerField()
     passcode_required = models.BooleanField(blank=True, default=False)
@@ -483,6 +484,7 @@ class Hand(models.Model):
 
         for player in players:
             if player.is_spectator:
+                player.reset_for_new_hand()
                 player.accept_dealt_cards([Card(value="ace", suit="spades"), Card(value="ace", suit="spades"), Card(value="ace", suit="spades")])
                 continue
             player.reset_for_new_hand()
@@ -559,6 +561,8 @@ class Hand(models.Model):
         current_low = None
         current_low_winner = None
         for player in self.game.player_set.all():
+            if player.is_spectator:
+                continue
             trump_cards = player.get_trump(self.trump)
             lowest_trump = min(trump_cards, key=lambda x: x.trump_rank(self.trump)) if trump_cards else None
             new_low = (
@@ -579,6 +583,8 @@ class Hand(models.Model):
         current_high = None
         current_high_winner = None
         for player in self.game.player_set.all():
+            if player.is_spectator:
+                continue
             trump_cards = player.get_trump(self.trump)
             highest_trump = max(trump_cards, key=lambda x: x.trump_rank(self.trump)) if trump_cards else None
             new_high = (
@@ -627,6 +633,14 @@ class Hand(models.Model):
                 trick = Trick.objects.create(hand=self, num=self.tricks.count() + 1)
                 trick.start_trick(last_taker)
                 trick.advance_trick()
+                players = self.game.player_set.all()
+                spectators = []
+                for player in players:
+                    if player.is_spectator:
+                        player.cards_in_hand = player.cards_in_hand[0:-1]
+                        player.save()
+                        spectators.append(player)
+                Player.objects.bulk_update(spectators, ["cards_in_hand"])
 
     def player_can_change_bid(self, player):
         next_bidder = self.bidder

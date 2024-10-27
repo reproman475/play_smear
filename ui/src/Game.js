@@ -152,7 +152,7 @@ function Game(props) {
       const autoPilotEnabled = myPlayer?.is_computer;
       const myTurnTrick = game?.current_trick?.active_player === myPlayer?.id;
       const myTurnBidding = (game?.current_hand?.bidder === myPlayer?.id) && (game?.state === "bidding" || game?.state === "declaring_trump");
-      const myTurn = myTurnTrick || myTurnBidding;
+      const myTurn = (myTurnTrick || myTurnBidding);
       const trickOver = Boolean(game?.current_trick?.taker);
       const gameOver = game?.state === "game_over";
       if ((needInput || autoPilotEnabled) && (!myTurn || autoPilotEnabled) && (!trickOver || autoPilotEnabled) && !gameOver) {

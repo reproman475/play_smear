@@ -21,7 +21,7 @@ class GameList extends Component {
     const { signedInUser, initLoading, gameList, handleDelete, handleJoin, handleResume, handleSpectate } = this.props;
 
     const title = this.props.mode === 'public' ? "Join a game started by someone else" : "Manage My Games";
-
+    
     const games = gameList.map(game =>
       <div className="GameList" key={game.id}>
         <Row type="flex" align="middle">
@@ -34,7 +34,7 @@ class GameList extends Component {
           </Col>
           <Col className="GameIcons" xs={12} md={6}>
             <Popover placement="topLeft" content="The number of players who have joined out of the total number of players this game accepts" title="Players">
-              {game.players.length}/{game.num_players} <UserOutlined />
+              {game.players.length - game.num_spectators}/{game.num_players} <UserOutlined />
             </Popover>
             <span style={{padding: "5px"}}> </span>
             <Popover placement="topLeft" content="The number of teams in this game" title="Teams">

@@ -19,7 +19,6 @@ class CreateGame extends Component {
     passcode: "",
     requirePasscode: false,
     numPlayers: null,
- //   numSpectators: null,
     numTeams: null,
     scoreToPlayTo: null,
     mustBidToWin: false,
@@ -63,7 +62,7 @@ class CreateGame extends Component {
     var game_data = {
       passcode: this.state.passcode,
       num_players: this.state.numPlayers,
-      // num_spectators: this.state.numSpectators,
+      num_spectators: 0,
       num_teams: this.state.numTeams ? this.state.numTeams : 0,
       score_to_play_to: this.state.scoreToPlayTo,
       single_player: this.props.single,
