@@ -20,6 +20,8 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('is_computer', models.BooleanField(blank=True, default=False)),
+                ('is_spectator', models.BooleanField(blank=True, default=False)),
+                ('spectate_only', models.BooleanField(blank=True, default=False)),
                 ('name', models.CharField(max_length=1024)),
                 ('team', models.CharField(max_length=1024)),
             ],

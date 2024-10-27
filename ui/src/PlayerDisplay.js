@@ -88,12 +88,13 @@ function Player(props) {
     borderRadius: "5px",
     border: teamBorder,
   };
-  const teamDisplay = team && (
+  const teamDisplay = team && teamName != "Spectators" && (
     <div style={teamStyles}>
       <TeamOutlined /> <b>{teamName}</b> <br/>
     </div>
   );
 
+  if (teamName != "Spectators") {
   return (
     <div style={playerStyles}>
       {teamDisplay}
@@ -105,6 +106,9 @@ function Player(props) {
       {results && resultsEntries}
     </div>
   );
+} else {
+  return(<div></div>);
+}
 }
 
 function PlayerDisplay(props) {

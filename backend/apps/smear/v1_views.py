@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from unique_names_generator import get_random_name
 from unique_names_generator.data import ADJECTIVES, ANIMALS, COLORS
 
-from apps.smear.models import Bid, Game, Hand, Play, Player, Team, Trick
+from apps.smear.models import Bid, Game, Hand, Play, Player, Team, Trick, Card
 from apps.smear.pagination import SmearPagination
 from apps.smear.permissions import (
     IsBidOwnerPermission,
@@ -76,7 +76,7 @@ class GameViewSet(viewsets.ModelViewSet):
         passcode = serializer.validated_data.get("passcode", None)
         instance = serializer.save(owner=self.request.user, passcode_required=bool(passcode))
         instance.name = get_random_name(combo=[ADJECTIVES, COLORS, ANIMALS])
-        Player.objects.create(game=instance, user=self.request.user, is_computer=False)
+        Player.objects.create(game=instance, user=self.request.user, is_computer=False, is_spectator=False, spectate_only=False)
         LOG.info(f"Created game {instance} and added {self.request.user} as player and creator")
 
         instance.create_initial_teams()
@@ -103,12 +103,18 @@ class GameViewSet(viewsets.ModelViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if game.player_set.count() >= game.num_players:
+        all_players = game.player_set.all()
+        num_spectators = 0
+        for player in all_players:
+            if player.is_spectator:
+                num_spectators += 1
+
+        if game.player_set.count() >= game.num_players - num_spectators:
             raise ValidationError(f"Unable to join game, already contains {game.num_players} players")
         if game.passcode_required and game.passcode != serializer.data.get("passcode", None):
             raise ValidationError("Unable to join game, passcode is required and was incorrect")
 
-        Player.objects.create(game=game, user=self.request.user)
+        Player.objects.create(game=game, user=self.request.user, is_spectator=False, spectate_only=False)
         LOG.info(f"Added {self.request.user} to game {game}")
         return Response({"status": "success"})
 
@@ -126,8 +132,18 @@ class GameViewSet(viewsets.ModelViewSet):
         if game.passcode_required and game.passcode != serializer.data.get("passcode", None):
             raise ValidationError("Unable to spectate game, passcode is required and was incorrect")
 
-        # TODO Don't add player to game, need something new for spectator
-        Player.objects.create(game=game, user=self.request.user)
+        player = Player.objects.create(game=game, user=self.request.user, is_spectator=True, spectate_only=True)
+        print(f"Spectate Status: {player.is_spectator}")
+
+        if game.state != Game.STARTING:
+            player.accept_dealt_cards([Card(value="ace", suit="spades"), Card(value="ace", suit="spades"), Card(value="ace", suit="spades")])
+            player.accept_dealt_cards([Card(value="ace", suit="spades"), Card(value="ace", suit="spades"), Card(value="ace", suit="spades")])
+            spec_team = list(game.teams.all())[-1]
+            player.team = spec_team
+            player.save()
+
+        
+
         LOG.info(f"Added {self.request.user} as spectator to game {game}")
         return Response({"status": "success"})
 
@@ -276,6 +292,17 @@ class TeamViewSet(viewsets.ModelViewSet):
 
         adding = request.method == "POST"
 
+        print(player.is_spectator)
+        print(f"team name: {team.name}")
+
+        if (player.spectate_only and adding and team.name != 'Spectators'):
+            LOG.info('Player can only spectate')
+            return Response({"status":"failure"})
+        if (team.name == 'Spectators'):
+            if adding:
+                player.is_spectator = True
+            else:
+                player.is_spectator = False
         player.team = team if adding else None
         player.save()
         LOG.info(f"{'Added' if adding else 'Removed'} player {player} {'to' if adding else 'from'} team {team}")

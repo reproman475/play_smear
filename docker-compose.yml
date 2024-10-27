@@ -18,6 +18,8 @@ services:
       - TAWK_KEY=abc123
   postgres:
     image: postgres:13
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
